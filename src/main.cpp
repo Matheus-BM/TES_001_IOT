@@ -3,8 +3,8 @@
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
  
-#define AWS_IOT_PUBLISH_TOPIC   "esp32_01/pub"
-#define AWS_IOT_SUBSCRIBE_TOPIC "esp32_01/sub"
+#define AWS_IOT_PUBLISH_TOPIC   "ESP32_01/pub"
+#define AWS_IOT_SUBSCRIBE_TOPIC "ESP32_01/sub"
   
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
@@ -16,7 +16,7 @@ void publishMessage()
   char jsonBuffer[128];
   serializeJson(doc, jsonBuffer); // print to client
   client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
-  Serial.println("Published!");
+  Serial.println("Published to " + String(AWS_IOT_PUBLISH_TOPIC));
 }
  
 void messageHandler(char* topic, byte* payload, unsigned int length)

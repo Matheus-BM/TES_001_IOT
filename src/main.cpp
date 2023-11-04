@@ -13,11 +13,10 @@ void publishMessage()
 {
   StaticJsonDocument<200> doc;
   doc["type"] = "teste";
-  doc["info"] = "teste";
-  char jsonBuffer[512];
+  char jsonBuffer[128];
   serializeJson(doc, jsonBuffer); // print to client
- 
   client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
+  Serial.println("Published!");
 }
  
 void messageHandler(char* topic, byte* payload, unsigned int length)
@@ -77,7 +76,7 @@ void connectAWS()
   
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(9600);
   connectAWS();
 }
  

@@ -23,10 +23,10 @@ MFRC522::StatusCode status;
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
  
-void publishMessage()
+void publishMessage(byte* username)
 {
   StaticJsonDocument<200> doc;
-  doc["type"] = "teste";
+  doc["username"] = username;
   char jsonBuffer[128];
   serializeJson(doc, jsonBuffer); // print to client
   client.publish(AWS_IOT_PUBLISH_TOPIC, jsonBuffer);
@@ -107,7 +107,7 @@ void leituraDados(){
     }
 
     status = mfrc522.MIFARE_Read(block,buffer,&size);
-     
+
 
     Serial.println(F("Dados: "));
     Serial.println(block);
@@ -117,7 +117,8 @@ void leituraDados(){
     }
 
     Serial.println("");
-
+    
+    publishMessage(buffer); 
 }
 
 void setup() {
@@ -146,8 +147,6 @@ void loop() {
   //-------------------------------------------
 
   leituraDados();
-
-  publishMessage();
   
   Serial.println(F("\n**End Reading**\n"));
 

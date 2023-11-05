@@ -5,6 +5,7 @@
 #include <SPI.h>
 #include <MFRC522.h>
 
+
 #define RST_PIN         22           // Configurable, see typical pin layout above
 #define SS_PIN          21          // Configurable, see typical pin layout above
 
@@ -29,6 +30,7 @@ PubSubClient client(net);
 constexpr uint8_t redLedPin = 14;
 constexpr uint8_t greenLedPin = 26;
 constexpr uint8_t blueLedPin = 33;
+constexpr uint8_t buzzerPin = 32;
 
 
 void publishMessage(byte* username)
@@ -144,6 +146,8 @@ void setup() {
   pinMode(redLedPin, OUTPUT);
   pinMode(greenLedPin, OUTPUT);
   pinMode(blueLedPin, OUTPUT);
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, LOW);
 
   digitalWrite(redLedPin, LED_OFF);
   digitalWrite(greenLedPin, LED_OFF);
@@ -171,16 +175,27 @@ void loop() {
 
   Serial.println(F("**Card Detected:**"));
 
-  digitalWrite(greenLedPin, LED_ON);
-
   //-------------------------------------------
+
+  if (!client.connected())
+  {
+    Serial.println("AWS IoT Timeout!");
+    digitalWrite(redLedPin, LED_ON);
+    connectAWS();
+    digitalWrite(redLedPin, LED_OFF);
+  }
+
+  digitalWrite(greenLedPin, LED_ON);
+  digitalWrite(buzzerPin, HIGH);
 
   leituraDados();
   
   Serial.println(F("\n**End Reading**\n"));
 
-  delay(1000); //change value if you want to read cards faster
-    digitalWrite(greenLedPin, LED_OFF);
+  delay(200); //change value if you want to read cards faster
+  digitalWrite(greenLedPin, LED_OFF);
+  digitalWrite(buzzerPin, LOW);
+  client.loop();
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
 }

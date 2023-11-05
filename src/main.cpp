@@ -4,6 +4,8 @@
 #include <ArduinoJson.h>
 #include <SPI.h>
 #include <MFRC522.h>
+#include <iostream>
+#include <string>
 
 
 #define RST_PIN         22           // Configurable, see typical pin layout above
@@ -33,7 +35,7 @@ constexpr uint8_t blueLedPin = 33;
 constexpr uint8_t buzzerPin = 32;
 
 
-void publishMessage(byte* username)
+void publishMessage(std::string  username)
 {
   StaticJsonDocument<200> doc;
   doc["username"] = username;
@@ -85,6 +87,7 @@ void connectAWS()
  
   // Create a message handler
   client.setCallback(messageHandler);
+  client.setKeepAlive(60);
  
   Serial.println("Connecting to AWS IOT");
  
@@ -109,6 +112,18 @@ void connectAWS()
   Serial.println("AWS IoT Connected!");
 }
   
+
+std::string cleanNonReadableBytes(const std::string& input) {
+    std::string cleaned;
+    for (char c : input) {
+        if (c >= 32 && c <= 126) {
+            cleaned += c;
+        }
+    }
+    return cleaned;
+}
+
+
 
 void leituraDados(){
     mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
@@ -138,8 +153,10 @@ void leituraDados(){
     }
 
     Serial.println("");
+
+    std::string cleanedData = cleanNonReadableBytes(reinterpret_cast<const char*>(buffer));
     
-    publishMessage(buffer); 
+    publishMessage(cleanedData); 
 }
 
 void setup() {

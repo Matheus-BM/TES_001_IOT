@@ -23,6 +23,14 @@ MFRC522::StatusCode status;
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
  
+#define LED_ON HIGH
+#define LED_OFF LOW
+
+constexpr uint8_t redLedPin = 14;
+constexpr uint8_t greenLedPin = 26;
+constexpr uint8_t blueLedPin = 33;
+
+
 void publishMessage(byte* username)
 {
   StaticJsonDocument<200> doc;
@@ -46,16 +54,24 @@ void messageHandler(char* topic, byte* payload, unsigned int length)
 
 void connectAWS()
 {
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
  
   Serial.println("Connecting to Wi-Fi");
  
   while (WiFi.status() != WL_CONNECTED)
-  {
+  { 
+    digitalWrite(redLedPin, LED_ON);
+    digitalWrite(greenLedPin, LED_ON);
     delay(500);
     Serial.print(".");
+    digitalWrite(redLedPin, LED_OFF);
+    digitalWrite(greenLedPin, LED_OFF);
   }
+   digitalWrite(redLedPin, LED_OFF);
+   digitalWrite(greenLedPin, LED_OFF);
+   digitalWrite(blueLedPin, LED_ON);
  
   // Configure WiFiClientSecure to use the AWS IoT device credentials
   net.setCACert(AWS_CERT_CA);
@@ -72,10 +88,13 @@ void connectAWS()
  
   while (!client.connect(THINGNAME))
   {
+    digitalWrite(blueLedPin, LED_ON);
     Serial.print(".");
     delay(100);
+    digitalWrite(blueLedPin, LED_OFF);
   }
- 
+  digitalWrite(blueLedPin, LED_OFF);
+
   if (!client.connected())
   {
     Serial.println("AWS IoT Timeout!");
@@ -122,6 +141,14 @@ void leituraDados(){
 }
 
 void setup() {
+  pinMode(redLedPin, OUTPUT);
+  pinMode(greenLedPin, OUTPUT);
+  pinMode(blueLedPin, OUTPUT);
+
+  digitalWrite(redLedPin, LED_OFF);
+  digitalWrite(greenLedPin, LED_OFF);
+  digitalWrite(blueLedPin, LED_OFF);
+
   Serial.begin(115200);
   connectAWS();                                           // Initialize serial communications with the PC
   SPI.begin();                                                  // Init SPI bus
@@ -144,6 +171,8 @@ void loop() {
 
   Serial.println(F("**Card Detected:**"));
 
+  digitalWrite(greenLedPin, LED_ON);
+
   //-------------------------------------------
 
   leituraDados();
@@ -151,7 +180,7 @@ void loop() {
   Serial.println(F("\n**End Reading**\n"));
 
   delay(1000); //change value if you want to read cards faster
-
+    digitalWrite(greenLedPin, LED_OFF);
   mfrc522.PICC_HaltA();
   mfrc522.PCD_StopCrypto1();
 }

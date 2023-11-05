@@ -11,9 +11,14 @@
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
 MFRC522::MIFARE_Key key;
+
+MFRC522::StatusCode status;
  
 #define AWS_IOT_PUBLISH_TOPIC   "ESP32_01/pub"
 #define AWS_IOT_SUBSCRIBE_TOPIC "ESP32_01/sub"
+
+#define SIZE_BUFFER 18
+#define MAX_SIZE_BLOCK 16
   
 WiFiClientSecure net = WiFiClientSecure();
 PubSubClient client(net);
@@ -84,27 +89,47 @@ void connectAWS()
 }
   
 
+void leituraDados(){
+    mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
+
+    for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
+
+    byte buffer[SIZE_BUFFER] = {0};
+
+    byte block = 1;
+    byte size = SIZE_BUFFER;
+
+    status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key,&(mfrc522.uid));
+    if(status != MFRC522::STATUS_OK){
+      Serial.print(F("Falha na leitura: "));
+      Serial.println(mfrc522.GetStatusCodeName(status));
+      return;
+    }
+
+    status = mfrc522.MIFARE_Read(block,buffer,&size);
+     
+
+    Serial.println(F("Dados: "));
+    Serial.println(block);
+    
+    for (uint8_t i = 0; i < MAX_SIZE_BLOCK; i++ ){
+        Serial.write(buffer[i]);
+    }
+
+    Serial.println("");
+
+}
+
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   connectAWS();                                           // Initialize serial communications with the PC
   SPI.begin();                                                  // Init SPI bus
   mfrc522.PCD_Init();                                              // Init MFRC522 card
-  Serial.println(F("Read personal data on a MIFARE PICC:"));    //shows in serial that it is ready to read
+  Serial.println(F("Aproxime seu cartão:"));    //shows in serial that it is ready to read
 }
 
 //*****************************************************************************************//
 void loop() {
-
-  // Prepare key - all keys are set to FFFFFFFFFFFFh at chip delivery from the factory.
-  MFRC522::MIFARE_Key key;
-  for (byte i = 0; i < 6; i++) key.keyByte[i] = 0xFF;
-
-  //some variables we need
-  byte block;
-  byte len;
-  MFRC522::StatusCode status;
-
-  //-------------------------------------------
 
   // Reset the loop if no new card present on the sensor/reader. This saves the entire process when idle.
   if ( ! mfrc522.PICC_IsNewCardPresent()) {
@@ -120,7 +145,7 @@ void loop() {
 
   //-------------------------------------------
 
-  mfrc522.PICC_DumpDetailsToSerial(&(mfrc522.uid)); //dump some details about the card
+  leituraDados();
 
   publishMessage();
   

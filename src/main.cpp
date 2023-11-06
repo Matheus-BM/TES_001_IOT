@@ -87,7 +87,7 @@ void connectAWS()
  
   // Create a message handler
   client.setCallback(messageHandler);
-  client.setKeepAlive(60);
+  client.setKeepAlive(10800);
  
   Serial.println("Connecting to AWS IOT");
  
